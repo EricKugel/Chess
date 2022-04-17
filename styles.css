@@ -9,8 +9,8 @@ body {
 }
 
 table {
-    width: 500px;
-    height: 500px;
+    width: 560px;
+    height: 560px;
     position: absolute;
     left: 50%;
     top: 50%;
@@ -24,6 +24,10 @@ table, td {
 
 td {
     text-align: center;
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
+}
+
+.selected {
+    background-color: yellow !important;
 }

@@ -1,4 +1,6 @@
 var table;
+var input;
+var messages;
 var selectedSquare = "";
 
 window.onload = function() {
@@ -19,7 +21,35 @@ window.onload = function() {
         tbody.appendChild(rowElement);
     }
 
-    gameLoop();
+    input = document.getElementById("input");
+    messages = document.getElementById("messages");
+    input.addEventListener("keypress", function(e) {
+        if (e.code == "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            if (input.innerHTML != "") {
+                var html = input.innerHTML;
+                message(html, "12:34", false);
+                input.innerHTML = "";
+                window.setTimeout(function() {
+                    message(["Hey that's pretty cool", "nice", "whoah dude", "cooool", "wait what"][Math.floor(Math.random() * 5)], "12:34", true);
+                }, Math.floor(Math.random() * 5000));
+            }
+        }            
+    });
+
+    update();
+}
+
+function message(html, time, received) {
+    var message = document.createElement("div");
+    message.className = "message " + (received ? "received" : "sent");
+    message.innerHTML = html;
+    var timeElement = document.createElement("div");
+    timeElement.className = "time";
+    timeElement.innerHTML = time;
+    message.appendChild(timeElement);
+    messages.appendChild(message);
+    messages.scrollTo(0, messages.scrollHeight);
 }
 
 function squareClicked(square) {
@@ -39,10 +69,11 @@ function getSquare(square) {
     return table.children[0].children[row].children[col];
 }
 
-function gameLoop() {
+function update() {
     var board = getBoard();
     for (var row = 0; row < 8; row++) {
         for (var col = 0; col < 8; col++) {
+            table.children[0].children[row].children[col].innerHTML = "";
             var piece = board[row][col];
             if (piece != "") {
                 var cell = table.children[0].children[row].children[col];
@@ -53,12 +84,28 @@ function gameLoop() {
 }
 
 function makeMove(from, to) {
-    getSquare(to).innerHTML = getSquare(from).innerHTML;
-    getSquare(from).innerHTML = "";
+    // getSquare(to).innerHTML = getSquare(from).innerHTML;
+    // getSquare(from).innerHTML = "";
+
+    var request = new XMLHttpRequest();
+    request.open("POST", "http://192.168.1.107:3000/moves?gameId=0", false);
+    request.setRequestHeader("Content-Type", "application/json");
+    request.send(JSON.stringify({
+        "start": from,
+        "end": to
+    }));
+
+    update();
 }
 
 function getBoard() {
-    var fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    var request = new XMLHttpRequest();
+    request.open("GET", "http://192.168.1.107:3000/games/0", false);
+    request.send();
+    var response = JSON.parse(request.responseText);
+
+    var fen = response.fen;
+    // var fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     var board = [];
 
     var fenRows = fen.substring(0, fen.indexOf(" ")).split("/");

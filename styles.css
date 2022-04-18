@@ -8,13 +8,19 @@ body {
     bottom: 20px;
 }
 
-table {
-    width: 560px;
+#wrapper {
+    width: 900px;
     height: 560px;
     position: absolute;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
+}
+
+table {
+    width: 560px;
+    height: 560px;
+    float: left;
 }
 
 table, td {
@@ -30,4 +36,52 @@ td {
 
 .selected {
     background-color: yellow !important;
+}
+
+#chat {
+    width: 300px;
+    height: 560px;
+    float: right;
+    background-color: white;
+    padding: 10px;
+    position: relative;
+}
+
+#input {
+    border: 1px solid black;
+    position: absolute;
+    width: 90%;
+    bottom: 10px;
+    padding: 5px;
+    height: 15%;
+    overflow-y: auto;
+}
+
+#messages {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 80%;
+}
+
+.message {
+    margin: 5px;
+    padding: 6px;
+    border-radius: 10px;
+    max-width: 80%;
+}
+
+.sent {
+    align-self: flex-end;
+    background-color: lightblue;
+}
+
+.received {
+    align-self: flex-start;
+    background-color: lightgray;
+}
+
+.time {
+    font-size: 12px;
+    color: gray;
 }

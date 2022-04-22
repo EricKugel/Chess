@@ -1,9 +1,42 @@
 var table;
 var input;
-var messages;
+var messagesElement;
 var selectedSquare = "";
+var userId;
+
+function post(body) {
+    var request = new XMLHttpRequest();
+    request.open("POST", "http://localhost:3000/play", false);
+    request.setRequestHeader("Content-Type", "application/json");
+    request.send(JSON.stringify(body));
+    console.log(request.responseText);
+    return JSON.parse(request.responseText);
+}
+
+function createGame() {
+    userId = post({
+        "command": "createGame",
+        "password": "password"
+    }).userId;
+    document.body.removeChild(document.getElementById("console"));
+    document.getElementById("wrapper").removeAttribute("hidden");
+    update();
+}
+
+function joinGame() {
+    userId = post({
+        "command": "joinGame",
+        "password": "password"
+    }).userId;
+    document.body.removeChild(document.getElementById("console"));
+    document.getElementById("wrapper").removeAttribute("hidden");
+    update();
+}
 
 window.onload = function() {
+    document.getElementById("create").onclick = createGame;
+    document.getElementById("join").onclick = joinGame;
+
     table = document.getElementById("table");
     var tbody = document.createElement("tbody");
     table.appendChild(tbody);
@@ -22,34 +55,26 @@ window.onload = function() {
     }
 
     input = document.getElementById("input");
-    messages = document.getElementById("messages");
+    messagesElement = document.getElementById("messages");
     input.addEventListener("keypress", function(e) {
         if (e.code == "Enter" && !e.shiftKey) {
-            e.preventDefault();
             if (input.innerHTML != "") {
                 var html = input.innerHTML;
-                message(html, "12:34", false);
+            e.preventDefault();
+                post({
+                    "command": "message",
+                    "userId": userId,
+                    "message": html
+                })
                 input.innerHTML = "";
-                window.setTimeout(function() {
-                    message(["Hey that's pretty cool", "nice", "whoah dude", "cooool", "wait what"][Math.floor(Math.random() * 5)], "12:34", true);
-                }, Math.floor(Math.random() * 5000));
+                update();
             }
         }            
     });
 
-    update();
-}
-
-function message(html, time, received) {
-    var message = document.createElement("div");
-    message.className = "message " + (received ? "received" : "sent");
-    message.innerHTML = html;
-    var timeElement = document.createElement("div");
-    timeElement.className = "time";
-    timeElement.innerHTML = time;
-    message.appendChild(timeElement);
-    messages.appendChild(message);
-    messages.scrollTo(0, messages.scrollHeight);
+    window.setInterval(function() {
+        update();
+    }, 2000);
 }
 
 function squareClicked(square) {
@@ -81,30 +106,43 @@ function update() {
             }
         }
     }
+
+    var messages = post({
+        "command": "getMessages",
+        "userId": userId,
+    }).messages;
+    
+    messagesElement.innerHTML = "";
+    for (var i = 0; i < messages.length; i++) {
+        var message = messages[i];
+        var messageElement = document.createElement("div");
+        messageElement.className = "message " + (message[1] == userId ? "sent" : "received");
+        messageElement.innerHTML = message[0];
+        var timeElement = document.createElement("div");
+        timeElement.className = "time";
+        timeElement.innerHTML = message[2];
+        messageElement.appendChild(timeElement);
+        messagesElement.appendChild(messageElement);
+        messagesElement.scrollTo(0, messagesElement.scrollHeight);
+    }
 }
 
 function makeMove(from, to) {
-    // getSquare(to).innerHTML = getSquare(from).innerHTML;
-    // getSquare(from).innerHTML = "";
-
-    var request = new XMLHttpRequest();
-    request.open("POST", "http://192.168.1.107:3000/moves?gameId=0", false);
-    request.setRequestHeader("Content-Type", "application/json");
-    request.send(JSON.stringify({
+    post({
+        "command": "move",
+        "userId": userId,
         "start": from,
         "end": to
-    }));
+    });
 
     update();
 }
 
 function getBoard() {
-    var request = new XMLHttpRequest();
-    request.open("GET", "http://192.168.1.107:3000/games/0", false);
-    request.send();
-    var response = JSON.parse(request.responseText);
-
-    var fen = response.fen;
+    var fen = post({
+        "command": "getBoard",
+        "userId": userId
+    }).fen;
     // var fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     var board = [];
 
